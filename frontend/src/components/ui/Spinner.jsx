@@ -1,7 +1,8 @@
-export default function Spinner({ full = false }) {
-  const spinner = (
-    <span className="h-8 w-8 animate-spin rounded-full border-4 border-teal-200 border-t-teal-600" />
+export default function Spinner({ size = 22, className = "" }) {
+  return (
+    <span
+      className={`inline-block animate-spin rounded-full border-2 border-white/15 border-t-teal-400 ${className}`}
+      style={{ width: size, height: size }}
+    />
   );
-  if (!full) return spinner;
-  return <div className="flex h-full min-h-[200px] w-full items-center justify-center py-16">{spinner}</div>;
 }

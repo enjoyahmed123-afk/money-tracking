@@ -1,21 +1,15 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
-import "./index.css";
-import App from "./App.jsx";
-import { AuthProvider } from "./context/AuthContext";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux'; // 1. استيراد Provider
+import { store } from './store/store'; // 2. استيراد الـ Store الخاص بك
+import "@/styles/global.css";
+import App from './App';
 
-createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-        <Toaster
-          position="top-center"
-          toastOptions={{ style: { fontFamily: "Cairo, sans-serif", direction: "rtl" } }}
-        />
-      </AuthProvider>
-    </BrowserRouter>
-  </StrictMode>,
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <Provider store={store}> {/* 3. تغليف التطبيق هنا */}
+      <App />
+    </Provider>
+  </React.StrictMode>
 );
+

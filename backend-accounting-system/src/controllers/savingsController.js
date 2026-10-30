@@ -3,51 +3,36 @@ const SavingsTransaction = require("../models/SavingsTransaction");
 const Account            = require("../models/Account");
 const AccountTransaction = require("../models/AccountTransaction");
 
-/* ── helper: credit an account and record the transaction ──
-   Atomic $inc — same race window as accountController.recordTxn, closed the
-   same way (ownership + isActive folded into the filter, balance change
-   applied by the DB engine instead of read-modify-save in JS). */
+/* ── helper: credit an account and record the transaction ── */
 async function creditAccount(userId, accountId, amount, description, date) {
-  const acc = await Account.findOneAndUpdate(
-    { _id: accountId, user: userId, isActive: true },
-    { $inc: { balance: amount } },
-    { new: true }
-  );
-  if (!acc) {
-    const exists = await Account.findOne({ _id: accountId, user: userId });
-    if (!exists) throw { status: 404, message: "Account not found." };
-    throw { status: 400, message: "Cannot record a transaction on an archived account." };
-  }
+  const acc = await Account.findOne({ _id: accountId, user: userId });
+  if (!acc) throw { status: 404, message: "Account not found." };
+  const balBefore = acc.balance;
+  acc.balance += amount;
+  await acc.save();
   await AccountTransaction.create({
     user: userId, account: acc._id,
     type: "credit", amount,
     description,
-    balanceBefore: acc.balance - amount, balanceAfter: acc.balance,
+    balanceBefore: balBefore, balanceAfter: acc.balance,
     date: date || new Date(),
   });
   return acc;
 }
 
-/* ── helper: debit an account and record the transaction ──
-   The insufficient-balance check is folded into the atomic filter too, so two
-   concurrent withdrawals that would together overdraw can no longer both pass. */
+/* ── helper: debit an account and record the transaction ── */
 async function debitAccount(userId, accountId, amount, description, date) {
-  const acc = await Account.findOneAndUpdate(
-    { _id: accountId, user: userId, isActive: true, balance: { $gte: amount } },
-    { $inc: { balance: -amount } },
-    { new: true }
-  );
-  if (!acc) {
-    const existing = await Account.findOne({ _id: accountId, user: userId });
-    if (!existing) throw { status: 404, message: "Account not found." };
-    if (!existing.isActive) throw { status: 400, message: "Cannot record a transaction on an archived account." };
-    throw { status: 400, message: "Insufficient account balance." };
-  }
+  const acc = await Account.findOne({ _id: accountId, user: userId });
+  if (!acc) throw { status: 404, message: "Account not found." };
+  if (acc.balance < amount) throw { status: 400, message: "Insufficient account balance." };
+  const balBefore = acc.balance;
+  acc.balance -= amount;
+  await acc.save();
   await AccountTransaction.create({
     user: userId, account: acc._id,
     type: "debit", amount,
     description,
-    balanceBefore: acc.balance + amount, balanceAfter: acc.balance,
+    balanceBefore: balBefore, balanceAfter: acc.balance,
     date: date || new Date(),
   });
   return acc;

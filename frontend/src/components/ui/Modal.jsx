@@ -1,40 +1,31 @@
-import { useEffect } from "react";
+﻿import { FiX } from "react-icons/fi";
 
-export default function Modal({ open, onClose, title, children, footer, size = "md" }) {
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e) => e.key === "Escape" && onClose?.();
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [open, onClose]);
-
+export default function Modal({ open, onClose, title, description, children, footer, size = "md" }) {
   if (!open) return null;
-
-  const widths = { sm: "max-w-sm", md: "max-w-md", lg: "max-w-2xl" };
+  const sizes = { sm: "max-w-sm", md: "max-w-md", lg: "max-w-2xl" };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div
-        className={`relative z-10 w-full ${widths[size]} max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl`}
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink-950/70 p-3 backdrop-blur-sm animate-page-in sm:items-center sm:p-4">
+      <div className={`glass-panel my-auto max-h-[calc(100dvh-12rem)] w-full overflow-y-auto lg:max-h-[calc(100dvh-2rem)] p-2 ${sizes[size]} border-white/15`}>
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            {title && <h3 className="text-lg font-bold text-slate-50">{title}</h3>}
+            {description && <p className="mt-1 text-sm text-slate-400">{description}</p>}
+          </div>
           <button
+            type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="إغلاق"
+            className="rounded-lg border border-white/10 p-1.5 text-slate-400 transition hover:bg-white/5 hover:text-slate-100"
           >
-            ✕
+            <FiX />
           </button>
         </div>
-        {children}
-        {footer && <div className="mt-6 flex items-center justify-end gap-3">{footer}</div>}
+        <div>{children}</div>
+        {footer && <div className="mt-6 flex justify-end gap-3">{footer}</div>}
       </div>
     </div>
   );
 }
+
+
+

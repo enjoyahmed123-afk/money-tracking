@@ -1,7 +1,6 @@
 const Expense  = require("../models/Expense");
 const Income   = require("../models/Income");
 const User     = require("../models/User");
-const Account  = require("../models/Account");
 const { recordTxn, reverseTxn } = require("./accountController");
 
 // GET /api/expenses
@@ -28,14 +27,6 @@ exports.create = async (req, res, next) => {
       }
     }
 
-    // Reject up front if accountId doesn't belong to this user (or is archived) —
-    // otherwise we'd create an Expense pointing at someone else's account.
-    if (accountId) {
-      const account = await Account.findOne({ _id: accountId, user: req.userId });
-      if (!account) return res.status(404).json({ success: false, message: "Account not found." });
-      if (!account.isActive) return res.status(400).json({ success: false, message: "Cannot record a transaction on an archived account." });
-    }
-
     const expense = await Expense.create({
       user: req.userId,
       amount: parseFloat(amount), description,
@@ -46,13 +37,11 @@ exports.create = async (req, res, next) => {
       account: accountId || null,
     });
 
-    let warning;
     if (accountId) {
-      const result = await recordTxn(req.userId, accountId, "debit", parseFloat(amount), description, expense.date, "Expense", expense._id);
-      if (result.insufficientBalance) warning = "INSUFFICIENT_BALANCE";
+      await recordTxn(req.userId, accountId, "debit", parseFloat(amount), description, expense.date, "Expense", expense._id);
     }
 
-    res.status(201).json({ success: true, data: expense, ...(warning && { warning }) });
+    res.status(201).json({ success: true, data: expense });
   } catch (err) { next(err); }
 };
 
@@ -62,18 +51,12 @@ exports.update = async (req, res, next) => {
     const old = await Expense.findOne({ _id: req.params.id, user: req.userId });
     if (!old) return res.status(404).json({ success: false, message: "Expense not found" });
 
-    const { amount, description, date, paymentMethod, expenseType, category, currency, notes, status, accountId } = req.body;
-
-    if (accountId) {
-      const account = await Account.findOne({ _id: accountId, user: req.userId });
-      if (!account) return res.status(404).json({ success: false, message: "Account not found." });
-      if (!account.isActive) return res.status(400).json({ success: false, message: "Cannot record a transaction on an archived account." });
-    }
-
     // Reverse previous account debit if it existed
     if (old.account) {
       await reverseTxn(req.userId, "Expense", old._id);
     }
+
+    const { amount, description, date, paymentMethod, expenseType, category, currency, notes, status, accountId } = req.body;
 
     const expense = await Expense.findOneAndUpdate(
       { _id: req.params.id, user: req.userId },
@@ -88,13 +71,11 @@ exports.update = async (req, res, next) => {
       { new: true, runValidators: true }
     );
 
-    let warning;
     if (accountId) {
-      const result = await recordTxn(req.userId, accountId, "debit", parseFloat(amount), description, expense.date, "Expense", expense._id);
-      if (result.insufficientBalance) warning = "INSUFFICIENT_BALANCE";
+      await recordTxn(req.userId, accountId, "debit", parseFloat(amount), description, expense.date, "Expense", expense._id);
     }
 
-    res.json({ success: true, data: expense, ...(warning && { warning }) });
+    res.json({ success: true, data: expense });
   } catch (err) { next(err); }
 };
 

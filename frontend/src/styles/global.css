@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Theme tokens ─────────────────────────────────────────────────────────
+   Values are RGB channels so Tailwind opacity modifiers keep working
+   (bg-white/5, text-slate-400, bg-ink-950/60 ...). Dark is the default. */
+:root,
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --c-overlay: 255 255 255;
+
+  --c-ink-950: 7 11 26;
+  --c-ink-900: 13 20 48;
+  --c-ink-800: 20 29 63;
+  --c-ink-700: 26 36 80;
+
+  --c-slate-50: 248 250 252;
+  --c-slate-100: 241 245 249;
+  --c-slate-200: 226 232 240;
+  --c-slate-300: 203 213 225;
+  --c-slate-400: 148 163 184;
+  --c-slate-500: 100 116 139;
+  --c-slate-600: 71 85 105;
+  --c-slate-700: 51 65 85;
+  --c-slate-800: 30 41 59;
+  --c-slate-900: 15 23 42;
+  --c-slate-950: 2 6 23;
+
+  --shadow-card: 0 24px 48px -24px rgba(2, 6, 23, 0.85), 0 12px 24px -18px rgba(34, 211, 238, 0.16);
+  --shadow-nav: 0 20px 40px -20px rgba(2, 6, 23, 0.8);
+
+  --app-bg:
+    radial-gradient(1200px 600px at 85% -10%, rgba(99, 102, 241, 0.22), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(45, 212, 191, 0.16), transparent 60%),
+    linear-gradient(180deg, #0d1430, #070b1a 70%);
+
+  --option-bg: #0f172a;
+  --option-fg: #f1f5f9;
+  --scroll-thumb: rgba(148, 163, 255, 0.18);
+  --scroll-thumb-hover: rgba(148, 163, 255, 0.32);
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+
+  /* dark tint instead of white for translucent surfaces/borders */
+  --c-overlay: 15 23 42;
+
+  --c-ink-950: 238 242 249;
+  --c-ink-900: 244 246 251;
+  --c-ink-800: 255 255 255;
+  --c-ink-700: 230 235 245;
+
+  /* text scale is inverted: "slate-100" (main text) becomes near-black */
+  --c-slate-50: 15 23 42;
+  --c-slate-100: 30 41 59;
+  --c-slate-200: 51 65 85;
+  --c-slate-300: 71 85 105;
+  --c-slate-400: 100 116 139;
+  --c-slate-500: 116 129 150;
+  --c-slate-600: 148 163 184;
+  --c-slate-700: 203 213 225;
+  --c-slate-800: 226 232 240;
+  --c-slate-900: 241 245 249;
+  --c-slate-950: 248 250 252;
+
+  --shadow-card: 0 16px 36px -18px rgba(15, 23, 42, 0.22), 0 4px 10px -6px rgba(15, 23, 42, 0.08);
+  --shadow-nav: 0 16px 32px -20px rgba(15, 23, 42, 0.25);
+
+  --app-bg:
+    radial-gradient(1100px 560px at 85% -10%, rgba(99, 102, 241, 0.10), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(45, 212, 191, 0.12), transparent 60%),
+    linear-gradient(180deg, #f6f8fc, #e9eef8 70%);
+
+  --option-bg: #ffffff;
+  --option-fg: #1e293b;
+  --scroll-thumb: rgba(71, 85, 105, 0.25);
+  --scroll-thumb-hover: rgba(71, 85, 105, 0.4);
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-ink-950 text-slate-100 antialiased bg-app-radial bg-fixed;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  ::selection {
+    @apply bg-teal-400/30;
+  }
+
+  /* Native <select> dropdown popups are drawn by the browser; give the
+     options an explicit background/color so they follow the theme. */
+  select option {
+    background-color: var(--option-bg);
+    color: var(--option-fg);
+  }
+
+  /* Thin glassy scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scroll-thumb);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scroll-thumb-hover);
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply relative rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.015] bg-ink-800/60 shadow-card backdrop-blur-xl;
+  }
+}
+
+/* ── Light theme adjustments ──────────────────────────────────────────────
+   The pastel accent text colors (-200/-300/-400) were picked for a dark
+   background and are too faint on white, so darken them in light mode. */
+html[data-theme="light"] .glass-panel {
+  background-image: none;
+  background-color: rgb(255 255 255 / 0.88);
+}
+
+html[data-theme="light"] .text-teal-200,
+html[data-theme="light"] .hover\:text-teal-200:hover { color: rgb(15 118 110); }
+html[data-theme="light"] .text-teal-300,
+html[data-theme="light"] .hover\:text-teal-300:hover { color: rgb(13 148 136); }
+html[data-theme="light"] .text-cyan-300 { color: rgb(14 116 144); }
+html[data-theme="light"] .text-indigo-300 { color: rgb(79 70 229); }
+html[data-theme="light"] .text-fuchsia-300 { color: rgb(162 28 175); }
+html[data-theme="light"] .text-emerald-300,
+html[data-theme="light"] .text-emerald-400 { color: rgb(4 120 87); }
+html[data-theme="light"] .text-red-300,
+html[data-theme="light"] .text-red-400 { color: rgb(220 38 38); }
+html[data-theme="light"] .text-amber-300,
+html[data-theme="light"] .text-amber-400 { color: rgb(180 83 9); }
+html[data-theme="light"] .text-violet-300 { color: rgb(109 40 217); }
+html[data-theme="light"] .text-red-500 { color: rgb(220 38 38); }
+
+/* Text on a gradient is designed to stay as-is in both themes */
+html[data-theme="light"] .bg-gradient-to-br.text-onaccent { color: #070b1a; }
+
+/* The gradient brand wordmark starts at slate-50, which is dark in light mode — fine. */

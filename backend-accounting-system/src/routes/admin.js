@@ -17,6 +17,5 @@ router.put("/users/:id/subscription",   c.updateSubscription);
 router.post("/users/:id/suspend",       c.suspendUser);
 router.post("/users/:id/activate",      c.activateUser);
 router.get("/users/:id/logs",           c.getUserLogs);
-router.get("/users/:id/accounts",       c.getUserAccounts);
 
 module.exports = router;

@@ -3,47 +3,30 @@ const AccountTransaction = require("../models/AccountTransaction");
 const User               = require("../models/User");
 
 /* ── helpers ─────────────────────────────────────── */
-// Records a debit/credit against an account the caller owns.
-// Throws { status, message } — callers already funnel errors through next(err),
-// and errorHandler duck-types on those two fields.
 async function recordTxn(userId, accountId, type, amount, description, date, relatedModel, relatedId, notes) {
-  const delta = type === "debit" ? -amount : amount;
-
-  // Ownership + archived-state are enforced atomically in the filter itself,
-  // and the balance change is applied with $inc — both close the race window
-  // where two concurrent requests could read the same stale balance.
-  const updated = await Account.findOneAndUpdate(
-    { _id: accountId, user: userId, isActive: true },
-    { $inc: { balance: delta } },
-    { new: true }
-  );
-
-  if (!updated) {
-    const exists = await Account.findOne({ _id: accountId, user: userId });
-    if (!exists) throw { status: 404, message: "Account not found." };
-    throw { status: 400, message: "Cannot record a transaction on an archived account." };
-  }
-
-  const balanceAfter  = updated.balance;
-  const balanceBefore = balanceAfter - delta;
-  const insufficientBalance = type === "debit" && balanceBefore < amount;
-
+  const account = await Account.findById(accountId);
+  if (!account) return;
+  const balanceBefore = account.balance;
+  if (type === "debit")   account.balance -= amount;
+  if (type === "credit")  account.balance += amount;
+  // "adjustment" sets balance directly — handled by adjustBalance
+  await account.save();
   await AccountTransaction.create({
     user: userId, account: accountId, type, amount,
-    description, balanceBefore, balanceAfter,
+    description, balanceBefore, balanceAfter: account.balance,
     date, relatedModel: relatedModel || null, relatedId: relatedId || null, notes,
   });
-
-  return { account: updated, insufficientBalance };
 }
 
 // Reverse a previously recorded transaction linked to a related doc
 async function reverseTxn(userId, relatedModel, relatedId) {
   const txn = await AccountTransaction.findOne({ user: userId, relatedModel, relatedId });
   if (!txn) return;
-  const delta = txn.type === "debit" ? txn.amount : txn.type === "credit" ? -txn.amount : 0;
-  if (delta !== 0) {
-    await Account.findOneAndUpdate({ _id: txn.account, user: userId }, { $inc: { balance: delta } });
+  const account = await Account.findById(txn.account);
+  if (account) {
+    if (txn.type === "debit")  account.balance += txn.amount;
+    if (txn.type === "credit") account.balance -= txn.amount;
+    await account.save();
   }
   await txn.deleteOne();
 }
@@ -141,7 +124,6 @@ exports.adjustBalance = async (req, res, next) => {
 
     const account = await Account.findOne({ _id: req.params.id, user: req.userId });
     if (!account) return res.status(404).json({ success: false, message: "Account not found" });
-    if (!account.isActive) return res.status(400).json({ success: false, message: "Cannot adjust the balance of an archived account." });
 
     const balanceBefore = account.balance;
     const balanceAfter  = parseFloat(newBalance);

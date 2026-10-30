@@ -110,25 +110,18 @@ exports.addPayment = async (req, res, next) => {
     if (!debt) return res.status(404).json({ success: false, message: "Debt not found" });
     if (debt.status === "paid") return res.status(400).json({ success: false, message: "Debt is already fully paid." });
 
-    // Deduct from linked account — atomic $inc closes the same race window
-    // documented for accountController.recordTxn (two concurrent payments
-    // reading the same stale balance).
+    // Deduct from linked account
     if (accountId) {
-      const acc = await Account.findOneAndUpdate(
-        { _id: accountId, user: req.userId, isActive: true },
-        { $inc: { balance: -amt } },
-        { new: true }
-      );
-      if (!acc) {
-        const exists = await Account.findOne({ _id: accountId, user: req.userId });
-        if (!exists) return res.status(404).json({ success: false, message: "Account not found." });
-        return res.status(400).json({ success: false, message: "Cannot record a transaction on an archived account." });
-      }
+      const acc = await Account.findOne({ _id: accountId, user: req.userId });
+      if (!acc) return res.status(404).json({ success: false, message: "Account not found." });
+      const balBefore = acc.balance;
+      acc.balance -= amt;
+      await acc.save();
       await AccountTransaction.create({
         user: req.userId, account: acc._id,
         type: "debit", amount: amt,
         description: `Debt payment — ${debt.creditor}`,
-        balanceBefore: acc.balance + amt, balanceAfter: acc.balance,
+        balanceBefore: balBefore, balanceAfter: acc.balance,
         date: date ? new Date(date) : new Date(),
       });
     }

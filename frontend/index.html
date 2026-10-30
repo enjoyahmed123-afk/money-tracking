@@ -1,13 +1,25 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <title>Money Tracker</title>
+    <meta name="theme-color" content="#0d1430" />
+    <link rel="icon" href="/favicon.ico" />
+    <title>MoneyFlow — Personal Finance Tracker</title>
+    <script>
+      // Apply the saved theme before first paint to avoid a dark -> light flash.
+      (function () {
+        try {
+          var saved = localStorage.getItem("theme");
+          var theme = saved === "light" || saved === "dark"
+            ? saved
+            : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+          document.documentElement.setAttribute("data-theme", theme);
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", theme === "light" ? "#f6f8fc" : "#0d1430");
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -8,18 +8,18 @@ const morgan = require("morgan");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
 
-const authRoutes            = require("./routes/auth");
-const incomeRoutes          = require("./routes/income");
-const expenseRoutes         = require("./routes/expenses");
+const authRoutes = require("./routes/auth");
+const incomeRoutes = require("./routes/income");
+const expenseRoutes = require("./routes/expenses");
 const expenseCategoryRoutes = require("./routes/expenseCategories");
 const accountRoutes         = require("./routes/accounts");
-const transactionRoutes     = require("./routes/transactions");
-const reportRoutes          = require("./routes/reports");
-const dashboardRoutes       = require("./routes/dashboard");
-const settingsRoutes        = require("./routes/settings");
-const savingsRoutes         = require("./routes/savings");
-const debtRoutes            = require("./routes/debts");
-const adminRoutes           = require("./routes/admin");
+const transactionRoutes = require("./routes/transactions");
+const debtRoutes      = require("./routes/debts");
+const reportRoutes    = require("./routes/reports");
+const dashboardRoutes  = require("./routes/dashboard");
+const settingsRoutes   = require("./routes/settings");
+const savingsRoutes    = require("./routes/savings");
+const adminRoutes      = require("./routes/admin");
 
 const app = express();
 

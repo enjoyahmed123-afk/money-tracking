@@ -244,26 +244,6 @@ exports.getUserLogs = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-/* ── GET /api/admin/users/:id/accounts ──────────── */
-exports.getUserAccounts = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.params.id).select("name email");
-    if (!user) return res.status(404).json({ success: false, message: "المستخدم غير موجود" });
-
-    const accounts = await Account.find({ user: req.params.id }).sort({ createdAt: 1 });
-
-    // Grouped per currency — mixed currencies can't be summed correctly.
-    const totalsByCurrency = accounts
-      .filter((a) => a.isActive)
-      .reduce((acc, a) => {
-        acc[a.currency] = (acc[a.currency] ?? 0) + a.balance;
-        return acc;
-      }, {});
-
-    res.json({ success: true, data: { user, accounts, totalsByCurrency } });
-  } catch (err) { next(err); }
-};
-
 /* ── POST /api/admin/auth/seed ───────────────────── */
 exports.seedAdmin = async (req, res, next) => {
   try {

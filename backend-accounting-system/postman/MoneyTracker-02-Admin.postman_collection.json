@@ -465,38 +465,6 @@
             }
           },
           "response": []
-        },
-        {
-          "name": "Get User Accounts — حسابات ومحافظ المستخدم",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/admin/users/{{targetUserId}}/accounts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "users",
-                "{{targetUserId}}",
-                "accounts"
-              ]
-            },
-            "description": "## حسابات ومحافظ مستخدم معيّن (Module 4)\n\n`GET /api/admin/users/:id/accounts`\n\nبيرجّع كل حسابات/محافظ اليوزر ده (بنك/محفظة/كاش) بغض النظر عن نوع اشتراكه، بالإضافة لإجمالي مجمّع لكل عملة.\n\nالإندبوينت ده اتضاف عشان الأدمن كان يقدر يشوف اليوزر في `GET /api/admin/users` بس مالوش أي رؤية على حساباته المالية جوه Module 4 (الحسابات والمحافظ).\n\n### 📤 Response — 200 OK\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"user\": { \"_id\": \"65f0...\", \"name\": \"Ahmed Ali\", \"email\": \"user@example.com\" },\n    \"accounts\": [\n      {\n        \"_id\": \"6602...\",\n        \"name\": \"محفظة فودافون كاش\",\n        \"type\": \"wallet\",\n        \"balance\": 1500,\n        \"currency\": \"EGP\",\n        \"color\": \"#0d9488\",\n        \"isActive\": true\n      }\n    ],\n    \"totalsByCurrency\": { \"EGP\": 1500 }\n  }\n}\n```\n\n> 💡 `totalsByCurrency` مجمّع لكل عملة على حدة (بس للحسابات النشطة `isActive: true`) — مفيش تحويل عملات تلقائي في السيستم، فمينفعش نجمع EGP مع USD في رقم واحد.\n\n### ❌ الأخطاء\n| الحالة | الكود | الرسالة |\n|---|---|---|\n| اليوزر مش موجود | `404` | `المستخدم غير موجود` |\n| بدون توكن أدمن | `401` | `Unauthorized` |\n| توكن يوزر عادي (مش أدمن) | `403` | `Forbidden` |\n\nمحتاج توكن أدمن زي باقي طلبات الفولدر ده — `Bearer {{adminToken}}` أوتوماتيك.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{adminToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          },
-          "response": []
         }
       ]
     },

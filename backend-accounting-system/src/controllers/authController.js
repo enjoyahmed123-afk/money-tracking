@@ -118,14 +118,7 @@ exports.forgotPassword = async (req, res, next) => {
         email,
         expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
       });
-      try {
         await sendPasswordResetEmail(email, token);
-      } catch (mailErr) {
-        console.error("sendPasswordResetEmail failed:", mailErr.message);
-        if (process.env.NODE_ENV !== "production") {
-          console.log(`[DEV] Password reset token for ${email}: ${token}`);
-        }
-      }
     }
 
     res.json({

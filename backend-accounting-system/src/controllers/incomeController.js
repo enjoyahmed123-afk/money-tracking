@@ -1,7 +1,6 @@
 const Income   = require("../models/Income");
 const Expense  = require("../models/Expense");
 const User     = require("../models/User");
-const Account  = require("../models/Account");
 const { recordTxn, reverseTxn } = require("./accountController");
 
 const MONTH_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -52,14 +51,6 @@ exports.create = async (req, res, next) => {
       }
     }
 
-    // Reject up front if accountId doesn't belong to this user (or is archived) —
-    // otherwise we'd create an Income pointing at someone else's account.
-    if (accountId) {
-      const account = await Account.findOne({ _id: accountId, user: req.userId });
-      if (!account) return res.status(404).json({ success: false, message: "Account not found." });
-      if (!account.isActive) return res.status(400).json({ success: false, message: "Cannot record a transaction on an archived account." });
-    }
-
     const income = await Income.create({
       user: req.userId,
       name, category,
@@ -84,17 +75,11 @@ exports.update = async (req, res, next) => {
     const old = await Income.findOne({ _id: req.params.id, user: req.userId });
     if (!old) return res.status(404).json({ success: false, message: "Income not found" });
 
-    const { name, category, amount, currency, receivedDate, recurrence, status, notes, accountId } = req.body;
-
-    if (accountId) {
-      const account = await Account.findOne({ _id: accountId, user: req.userId });
-      if (!account) return res.status(404).json({ success: false, message: "Account not found." });
-      if (!account.isActive) return res.status(400).json({ success: false, message: "Cannot record a transaction on an archived account." });
-    }
-
     if (old.account) {
       await reverseTxn(req.userId, "Income", old._id);
     }
+
+    const { name, category, amount, currency, receivedDate, recurrence, status, notes, accountId, isActive } = req.body;
 
     const income = await Income.findOneAndUpdate(
       { _id: req.params.id, user: req.userId },
@@ -103,6 +88,7 @@ exports.update = async (req, res, next) => {
         amount: parseFloat(amount),
         currency: currency || old.currency,
         receivedDate, recurrence, status, notes,
+        isActive: isActive ?? old.isActive,
         account: accountId || null,
       },
       { new: true, runValidators: true }
